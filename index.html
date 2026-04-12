@@ -1996,12 +1996,12 @@ async function sendTestEmail(){
       address:'123 Test St',
       service_date:new Date().toISOString().split('T')[0],
       status:'OK',
-      email_body:'This is a test email from PoolPro v4.
+      email_body:`This is a test email from akaPoolCO Pool Services.
 
 If you received this, your email setup is working correctly!
 
-Service ID: '+emailCfg.svcId+'
-Template ID: '+emailCfg.tplId,
+Service ID: ${emailCfg.svcId}
+Template ID: ${emailCfg.tplId}`,
       biz_name:settings.bizName||'Pool Service',
       owner_email:emailCfg.myEmail
     });
