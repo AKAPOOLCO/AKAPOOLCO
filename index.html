@@ -807,18 +807,18 @@ a{color:var(--accent);}
     <div class="reading-grid">
       <div class="r-cell highlight">
         <div class="r-lbl">FC</div>
-        <input class="r-input" type="number" step="0.2" id="s-fc" placeholder="—" oninput="calcDosing()">
+        <input class="r-input" type="number" step="0.2" id="s-fc" placeholder="—" oninput="calcCC()">
         <div class="r-unit">FAS-DPD</div>
       </div>
       <div class="r-cell">
         <div class="r-lbl">TC</div>
-        <input class="r-input" type="number" step="0.2" id="s-tc" placeholder="—">
+        <input class="r-input" type="number" step="0.2" id="s-tc" placeholder="—" oninput="calcCC()">
         <div class="r-unit">ppm</div>
       </div>
-      <div class="r-cell">
-        <div class="r-lbl">CC</div>
-        <input class="r-input" type="number" step="0.2" id="s-cc" placeholder="—">
-        <div class="r-unit">ppm</div>
+      <div class="r-cell" id="cc-cell">
+        <div class="r-lbl">CC <span style="font-size:8px;color:var(--hint);">auto</span></div>
+        <input class="r-input" type="number" step="0.2" id="s-cc" placeholder="—" readonly style="color:var(--muted);cursor:default;">
+        <div class="r-unit" id="cc-unit">TC − FC</div>
       </div>
       <div class="r-cell highlight">
         <div class="r-lbl">pH</div>
@@ -1228,6 +1228,51 @@ function getDemandAnalysis(poolId){
   };
 }
 
+// ─────────────────────────────────────────────────────────────
+//  AUTO-CALCULATE COMBINED CHLORINE  (CC = TC - FC)
+// ─────────────────────────────────────────────────────────────
+function calcCC(){
+  const fcEl=document.getElementById('s-fc');
+  const tcEl=document.getElementById('s-tc');
+  const ccEl=document.getElementById('s-cc');
+  const ccUnit=document.getElementById('cc-unit');
+  const ccCell=document.getElementById('cc-cell');
+
+  const fc=parseFloat(fcEl.value);
+  const tc=parseFloat(tcEl.value);
+
+  if(!isNaN(fc)&&!isNaN(tc)){
+    const cc=Math.round((tc-fc)*10)/10;
+    // CC can't be negative — clamp to 0
+    const ccVal=Math.max(0,cc);
+    ccEl.value=ccVal;
+
+    // Color the CC cell based on level
+    // 0–0.5 = OK (green), 0.5–1.0 = elevated (yellow), >1.0 = shock needed (red)
+    if(ccVal<=0.5){
+      ccCell.style.borderColor='var(--green-bd)';
+      ccEl.style.color='var(--green)';
+      if(ccUnit)ccUnit.textContent='OK';
+    } else if(ccVal<=1.0){
+      ccCell.style.borderColor='var(--yellow-bd)';
+      ccEl.style.color='var(--yellow)';
+      if(ccUnit)ccUnit.textContent='Elevated';
+    } else {
+      ccCell.style.borderColor='var(--red-bd)';
+      ccEl.style.color='var(--red)';
+      if(ccUnit)ccUnit.textContent='Shock!';
+    }
+  } else {
+    // Not enough data yet — clear CC
+    ccEl.value='';
+    ccCell.style.borderColor='';
+    ccEl.style.color='var(--muted)';
+    if(ccUnit)ccUnit.textContent='TC − FC';
+  }
+  // Always re-run full dosing panel after CC updates
+  calcDosing();
+}
+
 // Main dosing recommendation renderer
 function calcDosing(){
   const poolId=document.getElementById('svc-pool-id').value;
@@ -1235,6 +1280,8 @@ function calcDosing(){
   if(!pool)return;
 
   const fc   =parseFloat(document.getElementById('s-fc').value)||null;
+  const tc   =parseFloat(document.getElementById('s-tc').value)||null;
+  const cc   =parseFloat(document.getElementById('s-cc').value)||null;  // auto-calculated
   const ph   =parseFloat(document.getElementById('s-ph').value)||null;
   const ta   =parseFloat(document.getElementById('s-ta').value)||null;
   const ch   =parseFloat(document.getElementById('s-ch').value)||null;
@@ -1303,6 +1350,22 @@ function calcDosing(){
       <div class="dose-row"><span>CSI value</span><span class="dose-val">${csi!==null?(csi>0?'+':'')+csi:'—'}</span></div>
       <div class="dose-row"><span>Status</span><span><span class="csi-badge ${cs.cls}">${cs.text}</span></span></div>
       <div class="dose-note">Ideal range: −0.3 to +0.3</div>
+    </div>`;
+  }
+
+  // ── Combined Chlorine (CC) status ──
+  if(cc!==null){
+    const ccOk   = cc<=0.5;
+    const ccHigh = cc>1.0;
+    const ccCls  = ccOk?'d-ok':ccHigh?'d-alert':'d-warn';
+    const ccTcls = ccOk?'c-ok':ccHigh?'c-alert':'c-warn';
+    html+=`<div class="dose-block ${ccCls}">
+      <div class="dose-title ${ccTcls}">${ccOk?'✅ CC — Chloramines OK':ccHigh?'🚨 CC HIGH — Shock Required':'⚠️ CC Elevated — Monitor'}</div>
+      <div class="dose-row"><span>Combined Chlorine</span><span class="dose-val">${cc} ppm</span></div>
+      <div class="dose-row"><span>Calculated</span><span class="dose-val">TC (${tc??'—'}) − FC (${fc??'—'})</span></div>
+      ${ccOk?`<div class="dose-note">CC ≤ 0.5 ppm — chloramines within normal range.</div>`:''}
+      ${!ccOk&&!ccHigh?`<div class="dose-note">CC 0.5–1.0 ppm — slightly elevated. Test again next visit; consider shocking if rising.</div>`:''}
+      ${ccHigh?`<div class="dose-note">CC > 1.0 ppm — breakpoint shock required. Add enough chlorine to raise FC to 10× the CC level (${Math.round(cc*10)} ppm FC target).</div>`:''}
     </div>`;
   }
 
@@ -1694,7 +1757,7 @@ function showHistory(poolId){
           ${csi!==null?`<span class="csi-badge ${cs.cls}">CSI ${csi>0?'+':''}${csi}</span>`:''}
         </div>
         <div class="hist-readings">
-          ${[['FC',l.fc,'ppm'],['pH',l.ph,''],['Temp',l.temp,'°F'],['TA',l.ta,'ppm'],['Salt',l.salt,'ppm'],['CYA',l.cya,'ppm']].map(([lbl,val,u])=>`
+          ${[['FC',l.fc,'ppm'],['TC',l.tc,'ppm'],['CC',l.cc,'ppm'],['pH',l.ph,''],['Temp',l.temp,'°F'],['Salt',l.salt,'ppm']].map(([lbl,val,u])=>`
             <div class="hist-cell">
               <div class="hist-cell-lbl">${lbl}</div>
               <div class="hist-cell-val" style="font-size:14px;">${val??'—'}${val&&u?`<span style="font-size:9px;">${u}</span>`:''}</div>
