@@ -72,6 +72,14 @@ button{cursor:pointer;}
 a{color:var(--accent);}
 
 /* ─────────────────────────────────────────
+   SEASON TOGGLE
+───────────────────────────────────────── */
+.season-btns{display:flex;gap:0;border-radius:var(--r);overflow:hidden;border:1.5px solid var(--border);width:100%;}
+.season-btn{flex:1;padding:9px 8px;border:none;background:var(--surface2);font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;transition:all .15s;text-align:center;}
+.season-btn.summer.active{background:var(--yellow-lt);color:var(--yellow);border-right:1.5px solid var(--yellow-bd);}
+.season-btn.winter.active{background:var(--blue-lt);color:var(--blue);}
+
+/* ─────────────────────────────────────────
    WORK TOGGLES (pool profile)
 ───────────────────────────────────────── */
 .work-toggle-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
@@ -670,28 +678,27 @@ a{color:var(--accent);}
       </div>
 
       <div class="setting-card">
-        <div class="setting-head">⚗️ Chemistry Defaults</div>
+        <div class="setting-head">⚗️ Service Defaults</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5;">These apply to <strong>your workflow</strong>, not individual pools. Chemistry targets (CYA, Salt, FC, pH) are set per pool in the pool profile.</div>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">Min dose (oz)</label>
+            <label class="form-label">Min dose (oz) <span style="font-weight:400;color:var(--hint);">ignore doses below this</span></label>
             <input class="form-input" type="number" id="min-dose" placeholder="4">
           </div>
           <div class="form-group">
-            <label class="form-label">Liquid Cl strength</label>
+            <label class="form-label">Liquid Cl strength <span style="font-weight:400;color:var(--hint);">e.g. 0.10 = 10%</span></label>
             <input class="form-input" type="number" step="0.01" id="cl-str" placeholder="0.10">
           </div>
         </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Target CYA (ppm)</label>
-            <input class="form-input" type="number" id="def-cya" placeholder="70">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Target Salt (ppm)</label>
-            <input class="form-input" type="number" id="def-salt" placeholder="3200">
+        <div class="form-group" style="margin-top:14px;">
+          <label class="form-label">Season <span style="font-weight:400;color:var(--hint);">sets default FC target for new pools</span></label>
+          <div class="season-btns">
+            <button type="button" class="season-btn summer active" id="season-summer" onclick="setSeason('summer')">☀️ Summer — FC 6</button>
+            <button type="button" class="season-btn winter" id="season-winter" onclick="setSeason('winter')">❄️ Winter — FC 4</button>
           </div>
         </div>
         <button class="btn btn-ghost btn-full" onclick="saveDefaults()">Save Defaults</button>
+        <div id="defaults-msg" style="font-size:12px;text-align:center;margin-top:7px;display:none;"></div>
       </div>
 
       <div class="setting-card">
@@ -1103,7 +1110,7 @@ const S={
 let pools       = S.get('pools')    || [];
 let inventory   = S.get('inv')      || [];
 let logs        = S.get('logs')     || [];
-let settings    = S.get('settings') || {pin:'1234',bizName:'Pool Service',minDose:4,clStrength:.10,defCYA:70,defSalt:3200};
+let settings    = S.get('settings') || {pin:'1234',bizName:'Pool Service',minDose:4,clStrength:.10,season:'summer',defFC:6};
 let emailCfg    = S.get('email')    || {svcId:'',tplId:'',pubKey:''};
 let sortMode    = 'date';
 let freqFilter  = 'all';
@@ -1375,8 +1382,8 @@ function calcDosing(){
 
   const targetFC  = pool.targetFC  || 6;
   const targetPH  = pool.targetPH  || 7.4;
-  const targetCYA = pool.targetCYA || settings.defCYA || 70;
-  const targetSalt= pool.saltTarget|| settings.defSalt|| 3200;
+  const targetCYA = pool.targetCYA || 70;  // TFP standard; set per pool in profile
+  const targetSalt= pool.saltTarget|| 3200;  // standard SWG target; set per pool in profile
   const vol       = pool.volume    || 15000;
   const isSWG     = !!pool.isSWG;
 
@@ -1823,7 +1830,7 @@ async function submitService(){
   const clDose=!pool.isSWG&&fc?calcChlorineDose(fc,targetFC,vol):0;
   const acidDose=ph&&ta?calcAcidDose(ph,targetPH,ta,vol):0;
   const saltDose=pool.isSWG&&salt?calcSaltDose(salt,pool.saltTarget||3200,vol):0;
-  const cyaDose=cya?calcCYADose(cya,pool.targetCYA||settings.defCYA,vol):0;
+  const cyaDose=cya?calcCYADose(cya,pool.targetCYA||70,vol):0;
   const csi=calcCSI(ph,temp,ta,ch,cya);
   const cs=csiStatus(csi);
   let fcStatus='OK';
@@ -2140,7 +2147,13 @@ function openAddPool(){
   document.getElementById('edit-pool-idx').value='';
   document.getElementById('pool-sheet-title').textContent='Add Pool';
   ['p-name','p-addr','p-owner','p-phone','p-email','p-notes'].forEach(id=>document.getElementById(id).value='');
-  ['p-vol','p-tfc','p-tph','p-tcya','p-tta','p-salt'].forEach(id=>document.getElementById(id).value='');
+  // Smart auto-fill: sensible starting targets for a new traditional pool
+  document.getElementById('p-vol').value  = '';
+  document.getElementById('p-tfc').value  = String(settings.defFC||6);  // season-aware
+  document.getElementById('p-tph').value  = '7.4';
+  document.getElementById('p-tcya').value = '40';   // TFP standard for liquid chlorine
+  document.getElementById('p-tta').value  = '80';
+  document.getElementById('p-salt').value = '';
   document.getElementById('p-freq').value='weekly';
   document.getElementById('p-swg-brand').value='pentair';
   swgOn=false;document.getElementById('swg-toggle').classList.remove('on');
@@ -2152,6 +2165,8 @@ function openAddPool(){
   setProfileWork([]);
   document.getElementById('pool-del-wrap').style.display='none';
   openSheet('pool-sheet');
+  // Focus volume field so keyboard pops up on the most critical field
+  setTimeout(()=>{ const el=document.getElementById('p-vol'); if(el) el.focus(); }, 320);
 }
 function editPool(idx){
   const p=pools[idx];
@@ -2188,7 +2203,15 @@ function toggleSWG(){
   swgOn=!swgOn;
   document.getElementById('swg-toggle').classList.toggle('on',swgOn);
   document.getElementById('swg-fields').style.display=swgOn?'block':'none';
-  if(swgOn&&!document.getElementById('p-salt').value) document.getElementById('p-salt').value=3200;
+  if(swgOn){
+    // SWG ON: bump CYA to 70 (SWG standard), pre-fill salt to 3200
+    document.getElementById('p-tcya').value = '70';
+    if(!document.getElementById('p-salt').value) document.getElementById('p-salt').value='3200';
+  } else {
+    // SWG OFF: drop CYA back to 40 (liquid chlorine standard)
+    // Salt value is preserved in the hidden field — data is never lost on accidental tap
+    document.getElementById('p-tcya').value = '40';
+  }
 }
 function savePool(){
   const idxEl=document.getElementById('edit-pool-idx').value;
@@ -2273,19 +2296,29 @@ function loadEmailFields(){
   document.getElementById('ejs-key').value=emailCfg.pubKey||'';
   document.getElementById('biz-name').value=settings.bizName||'';
 }
+function setSeason(s){
+  settings.season=s;
+  settings.defFC = s==='summer' ? 6 : 4;
+  S.set('settings',settings);
+  document.getElementById('season-summer').classList.toggle('active',s==='summer');
+  document.getElementById('season-winter').classList.toggle('active',s==='winter');
+  // Show confirmation
+  showMsg('defaults-msg','✅ Season set to '+(s==='summer'?'Summer (FC 6)':'Winter (FC 4)'),'g');
+}
+
 function saveDefaults(){
   settings.minDose=parseFloat(document.getElementById('min-dose').value)||4;
   settings.clStrength=parseFloat(document.getElementById('cl-str').value)||0.10;
-  settings.defCYA=parseFloat(document.getElementById('def-cya').value)||70;
-  settings.defSalt=parseFloat(document.getElementById('def-salt').value)||3200;
+  // season is saved immediately on click via setSeason(); no extra read needed
   S.set('settings',settings);
   alert('✅ Defaults saved!');
 }
 function loadDefaultFields(){
   document.getElementById('min-dose').value=settings.minDose||4;
   document.getElementById('cl-str').value=settings.clStrength||0.10;
-  document.getElementById('def-cya').value=settings.defCYA||70;
-  document.getElementById('def-salt').value=settings.defSalt||3200;
+  const s=settings.season||'summer';
+  document.getElementById('season-summer').classList.toggle('active',s==='summer');
+  document.getElementById('season-winter').classList.toggle('active',s==='winter');
 }
 
 // ─────────────────────────────────────────────────────────────
