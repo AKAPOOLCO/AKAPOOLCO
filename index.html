@@ -104,6 +104,24 @@ a{color:var(--accent);}
 .season-btn.winter.active{background:var(--blue-lt);color:var(--blue);}
 
 /* ─────────────────────────────────────────
+   CHEMICALS ADDED YES/NO BUTTONS
+───────────────────────────────────────── */
+.chem-yn-btn{flex:1;padding:9px 8px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--surface);font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;transition:all .15s;text-align:center;}
+.chem-yn-btn.yes-active{border-color:var(--green-bd);background:var(--green-lt);color:var(--green);}
+.chem-yn-btn.no-active{border-color:var(--border2);background:var(--surface2);color:var(--text);}
+
+/* ─────────────────────────────────────────
+   SERVICE FORM WORK TOGGLES
+───────────────────────────────────────── */
+.svc-work-toggle{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;user-select:none;-webkit-user-select:none;}
+.swt-track{width:44px;height:26px;background:var(--border2);border-radius:13px;transition:background .2s;position:relative;flex-shrink:0;}
+.swt-thumb{position:absolute;top:3px;left:3px;width:20px;height:20px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+.svc-work-toggle.selected .swt-track{background:var(--green);}
+.svc-work-toggle.selected .swt-thumb{transform:translateX(18px);}
+.swt-lbl{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;}
+.svc-work-toggle.selected .swt-lbl{color:var(--green);}
+
+/* ─────────────────────────────────────────
    WORK TOGGLES (pool profile)
 ───────────────────────────────────────── */
 .work-toggle-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
@@ -1044,16 +1062,32 @@ a{color:var(--accent);}
   <!-- WORK DONE -->
   <div class="reading-section mt12" style="margin-top:10px;">
     <div class="reading-section-title">Work Performed</div>
-    <div class="work-chips" id="work-chips">
-      <label class="work-chip" onclick="toggleChip(this)"><input type="checkbox" value="skimmer">🕸 Skimmer</label>
-      <label class="work-chip" onclick="toggleChip(this)"><input type="checkbox" value="brush">🪣 Brush</label>
-      <label class="work-chip" onclick="toggleChip(this)"><input type="checkbox" value="vacuum">💨 Vacuum</label>
-      <label class="work-chip" onclick="toggleChip(this)"><input type="checkbox" value="filter">🔧 Filter</label>
-      <label class="work-chip" onclick="toggleChip(this)"><input type="checkbox" value="leaves">🍂 Leaves</label>
-      <label class="work-chip" onclick="toggleChip(this)"><input type="checkbox" value="backwash">💧 Backwash</label>
-      <label class="work-chip" onclick="toggleChip(this)"><input type="checkbox" value="shock">⚡ Shock</label>
-      <label class="work-chip" onclick="toggleChip(this)"><input type="checkbox" value="algae">🟢 Algae Tx</label>
-      <label class="work-chip" onclick="toggleChip(this)"><input type="checkbox" value="test-only">🧪 Test Only</label>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;" id="work-chips">
+      <label class="svc-work-toggle" onclick="toggleChip(this)" data-val="test-only">
+        <input type="checkbox" value="test-only" style="display:none;">
+        <div class="swt-track"><div class="swt-thumb"></div></div>
+        <span class="swt-lbl">Test Only</span>
+      </label>
+      <label class="svc-work-toggle" onclick="toggleChip(this)" data-val="leaves">
+        <input type="checkbox" value="leaves" style="display:none;">
+        <div class="swt-track"><div class="swt-thumb"></div></div>
+        <span class="swt-lbl">Leaves</span>
+      </label>
+      <label class="svc-work-toggle" onclick="toggleChip(this)" data-val="brush">
+        <input type="checkbox" value="brush" style="display:none;">
+        <div class="swt-track"><div class="swt-thumb"></div></div>
+        <span class="swt-lbl">Brush</span>
+      </label>
+      <label class="svc-work-toggle" onclick="toggleChip(this)" data-val="skimmer">
+        <input type="checkbox" value="skimmer" style="display:none;">
+        <div class="swt-track"><div class="swt-thumb"></div></div>
+        <span class="swt-lbl">Skimmer</span>
+      </label>
+      <label class="svc-work-toggle" onclick="toggleChip(this)" data-val="filter">
+        <input type="checkbox" value="filter" style="display:none;">
+        <div class="swt-track"><div class="swt-thumb"></div></div>
+        <span class="swt-lbl">Filter</span>
+      </label>
     </div>
   </div>
 
@@ -1082,6 +1116,16 @@ a{color:var(--accent);}
       <label class="form-label">Acid Added (oz) — override</label>
       <input class="form-input" type="number" id="s-acid-add" placeholder="0">
     </div>
+  </div>
+
+  <!-- CHEMICALS ADDED TOGGLE -->
+  <div style="background:var(--surface2);border-radius:var(--r);padding:12px 13px;margin-bottom:10px;margin-top:10px;">
+    <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;">Chemicals Added This Visit <span style="color:var(--red);font-size:11px;">*required</span></div>
+    <div style="display:flex;gap:10px;" id="chem-added-btns">
+      <button type="button" class="chem-yn-btn" id="chem-yes" onclick="setChemAdded(true)">Yes</button>
+      <button type="button" class="chem-yn-btn" id="chem-no"  onclick="setChemAdded(false)">No</button>
+    </div>
+    <div id="chem-added-err" style="font-size:11px;color:var(--red);margin-top:5px;display:none;">Please select Yes or No before submitting</div>
   </div>
 
   <div class="flex gap8 mt12" style="margin-top:10px;">
@@ -1113,18 +1157,48 @@ a{color:var(--accent);}
 
   <div class="reading-section mt12" style="margin-top:10px;">
     <div class="reading-section-title">Quick Maintenance</div>
-    <div class="work-chips" id="ql-work-chips">
-      <label class="work-chip" onclick="toggleChip(this)"><input type="checkbox" value="skimmer">🕸 Skimmer</label>
-      <label class="work-chip" onclick="toggleChip(this)"><input type="checkbox" value="brush">🪣 Brush</label>
-      <label class="work-chip" onclick="toggleChip(this)"><input type="checkbox" value="basket">🗑 Basket</label>
-      <label class="work-chip" onclick="toggleChip(this)"><input type="checkbox" value="leaves">🍂 Leaves</label>
-      <label class="work-chip" onclick="toggleChip(this)"><input type="checkbox" value="filter">🔧 Filter</label>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;" id="ql-work-chips">
+      <label class="svc-work-toggle" onclick="toggleChip(this)" data-val="test-only">
+        <input type="checkbox" value="test-only" style="display:none;">
+        <div class="swt-track"><div class="swt-thumb"></div></div>
+        <span class="swt-lbl">Test Only</span>
+      </label>
+      <label class="svc-work-toggle" onclick="toggleChip(this)" data-val="leaves">
+        <input type="checkbox" value="leaves" style="display:none;">
+        <div class="swt-track"><div class="swt-thumb"></div></div>
+        <span class="swt-lbl">Leaves</span>
+      </label>
+      <label class="svc-work-toggle" onclick="toggleChip(this)" data-val="brush">
+        <input type="checkbox" value="brush" style="display:none;">
+        <div class="swt-track"><div class="swt-thumb"></div></div>
+        <span class="swt-lbl">Brush</span>
+      </label>
+      <label class="svc-work-toggle" onclick="toggleChip(this)" data-val="skimmer">
+        <input type="checkbox" value="skimmer" style="display:none;">
+        <div class="swt-track"><div class="swt-thumb"></div></div>
+        <span class="swt-lbl">Skimmer</span>
+      </label>
+      <label class="svc-work-toggle" onclick="toggleChip(this)" data-val="filter">
+        <input type="checkbox" value="filter" style="display:none;">
+        <div class="swt-track"><div class="swt-thumb"></div></div>
+        <span class="swt-lbl">Filter</span>
+      </label>
     </div>
   </div>
 
   <div class="form-group mt12" style="margin-top:10px;">
     <label class="form-label">Quick Note</label>
     <textarea class="form-textarea" id="ql-notes" placeholder="Brief observation..." style="min-height:50px;"></textarea>
+  </div>
+
+  <!-- CHEMICALS ADDED TOGGLE - QUICK LOG -->
+  <div style="background:var(--surface2);border-radius:var(--r);padding:12px 13px;margin-bottom:10px;margin-top:10px;">
+    <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;">Chemicals Added This Visit <span style="color:var(--red);font-size:11px;">*required</span></div>
+    <div style="display:flex;gap:10px;" id="ql-chem-added-btns">
+      <button type="button" class="chem-yn-btn" id="ql-chem-yes" onclick="setQLChemAdded(true)">Yes</button>
+      <button type="button" class="chem-yn-btn" id="ql-chem-no"  onclick="setQLChemAdded(false)">No</button>
+    </div>
+    <div id="ql-chem-added-err" style="font-size:11px;color:var(--red);margin-top:5px;display:none;">Please select Yes or No before submitting</div>
   </div>
 
   <div class="flex gap8 mt12" style="margin-top:10px;">
@@ -1205,8 +1279,8 @@ a{color:var(--accent);}
 //  STORAGE
 // ─────────────────────────────────────────────────────────────
 const S={
-  get:k=>{try{return JSON.parse(localStorage.getItem('akav3_'+k));}catch{return null;}},
-  set:(k,v)=>localStorage.setItem('akav3_'+k,JSON.stringify(v))
+  get:k=>{try{return JSON.parse(localStorage.getItem('akav3u_'+k));}catch{return null;}},
+  set:(k,v)=>localStorage.setItem('akav3u_'+k,JSON.stringify(v))
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -1223,7 +1297,9 @@ let calView     = 'month';
 let calDate     = new Date();
 let swgOn         = false;  // pool form toggle
 let otoSelected   = null;   // quick log oto
-let notesInReport = false;  // whether notes appear in client email
+let notesInReport  = false;  // whether notes appear in client email
+let chemAdded      = null;   // null=not set, true=yes, false=no (Full Log)
+let qlChemAdded    = null;   // null=not set, true=yes, false=no (Quick Log)
 
 // ─────────────────────────────────────────────────────────────
 //  AUTH
@@ -1243,7 +1319,7 @@ function unlock(){
 function hardReset(){
   if(confirm('This will reset your PIN to 1234 and clear ALL saved data (pools, logs, settings). Continue?')){
     // Wipe every akav1_ key from localStorage
-    Object.keys(localStorage).filter(k=>k.startsWith('akav3_')).forEach(k=>localStorage.removeItem(k));
+    Object.keys(localStorage).filter(k=>k.startsWith('akav3u_')).forEach(k=>localStorage.removeItem(k));
     // Also wipe old pp3_ keys in case they were causing the issue
     Object.keys(localStorage).filter(k=>k.startsWith('pp3_')||k.startsWith('pp_')).forEach(k=>localStorage.removeItem(k));
     alert('Done! PIN is now 1234. Reloading...');
@@ -1844,7 +1920,7 @@ function openService(poolId){
   });
   // Pre-populate work chips from pool profile defaults
   const dw = pool.defaultWork || [];
-  document.querySelectorAll('#work-chips .work-chip').forEach(c=>{
+  document.querySelectorAll('#work-chips .svc-work-toggle').forEach(c=>{
     const val = c.querySelector('input').value;
     const on  = dw.includes(val);
     c.querySelector('input').checked = on;
@@ -1855,6 +1931,10 @@ function openService(poolId){
   // Always default notes toggle to OFF for each new service
   notesInReport=false;
   document.getElementById('notes-toggle').classList.remove('on');
+  chemAdded=null;
+  document.getElementById('chem-yes').className='chem-yn-btn';
+  document.getElementById('chem-no').className='chem-yn-btn';
+  document.getElementById('chem-added-err').style.display='none';
   openSheet('service-sheet');
 }
 
@@ -1867,12 +1947,16 @@ function openQuickLog(poolId){
   document.querySelectorAll('#oto-selector .oto-btn').forEach(b=>b.className='oto-btn');
   // Pre-populate quick log work chips from pool profile defaults
   const qdw = pool.defaultWork || [];
-  document.querySelectorAll('#ql-work-chips .work-chip').forEach(c=>{
+  document.querySelectorAll('#ql-work-chips .svc-work-toggle').forEach(c=>{
     const val = c.querySelector('input').value;
     const on  = qdw.includes(val);
     c.querySelector('input').checked = on;
     c.classList.toggle('selected', on);
   });
+  qlChemAdded=null;
+  document.getElementById('ql-chem-yes').className='chem-yn-btn';
+  document.getElementById('ql-chem-no').className='chem-yn-btn';
+  document.getElementById('ql-chem-added-err').style.display='none';
   openSheet('quick-sheet');
 }
 
@@ -1890,21 +1974,51 @@ function selectOTO(el){
 }
 
 function toggleChip(label){
-  label.classList.toggle('selected');
+  const cb=label.querySelector('input[type="checkbox"]');
+  if(cb){ cb.checked=!cb.checked; }
+  label.classList.toggle('selected', cb?cb.checked:!label.classList.contains('selected'));
 }
 
-function submitQuickLog(){
+async function submitQuickLog(){
+  if(qlChemAdded===null){
+    document.getElementById('ql-chem-added-err').style.display='block';
+    return;
+  }
   const poolId=document.getElementById('ql-pool-id').value;
+  const pool=pools.find(p=>p.id===poolId);
   const notes=document.getElementById('ql-notes').value;
   const work=[...document.querySelectorAll('#ql-work-chips input:checked')].map(c=>c.value);
   const log={
     id:Date.now().toString(),poolId,
     date:new Date().toISOString().split('T')[0],
     isQuickVisit:true,otos:otoSelected||'not-done',
-    work,notes,skipped:false,
+    work,notes,chemicalsAdded:qlChemAdded,skipped:false,
     fc:null,ph:null,tc:null,cc:null,ta:null,ch:null,cya:null,salt:null,temp:null
   };
   logs.push(log);S.set('logs',logs);
+
+  // Send Quick Visit email to client
+  if(emailCfg.pubKey&&emailCfg.svcId&&pool&&pool.email){
+    const qlBtn=document.querySelector('#quick-sheet .btn-teal');
+    if(qlBtn){qlBtn.innerHTML='<span class="spinner"></span>';qlBtn.disabled=true;}
+    try{
+      const qlBody=buildQuickHTMLEmail(pool,log);
+      await emailjs.send(emailCfg.svcId,emailCfg.tplId,{
+        email:pool.email,
+        to_email:pool.email,
+        to_name:pool.ownerName,
+        pool_name:pool.name,
+        address:pool.address,
+        service_date:log.date,
+        status:'Quick Visit',
+        email_body:qlBody,
+        biz_name:settings.bizName||'akaPoolCO Pool Services'
+      });
+    }catch(err){
+      console.warn('Quick Log email failed:',err.text||err);
+    }
+    if(qlBtn){qlBtn.innerHTML='Save Quick Log';qlBtn.disabled=false;}
+  }
   closeSheet('quick-sheet');renderRoute();renderDashboard();updateBadge();
 }
 
@@ -1921,6 +2035,11 @@ function submitSkip(){
 }
 
 async function submitService(){
+  // Guard: chemicals added must be answered
+  if(chemAdded===null){
+    document.getElementById('chem-added-err').style.display='block';
+    return;
+  }
   const poolId=document.getElementById('svc-pool-id').value;
   const pool=pools.find(p=>p.id===poolId);
   const g=id=>parseFloat(document.getElementById(id).value)||null;
@@ -1931,7 +2050,7 @@ async function submitService(){
   const work=[...document.querySelectorAll('#work-chips input:checked')].map(c=>c.value);
 
   const log={id:Date.now().toString(),poolId,date:new Date().toISOString().split('T')[0],
-    isQuickVisit:false,fc,tc,cc,ph,ta,ch,cya,salt,temp,clAdded:clAdd,acidAdded:acidAdd,work,notes,skipped:false};
+    isQuickVisit:false,fc,tc,cc,ph,ta,ch,cya,salt,temp,clAdded:clAdd,acidAdded:acidAdd,work,notes,chemicalsAdded:chemAdded,skipped:false};
   logs.push(log);S.set('logs',logs);
 
   // Compute for email
@@ -1979,18 +2098,68 @@ async function submitService(){
   }
 }
 
+function buildQuickHTMLEmail(pool,log){
+  const {work,notes,otos,chemicalsAdded}=log;
+  const otoMap={none:'No chlorine detected ⚠️',clear:'Trace — chlorine present',yellow:'Yellow — chlorine present ✓',orange:'Orange — high chlorine','not-done':'Not tested'};
+  const otoText=otoMap[otos]||'—';
+  const otoColor=otos==='none'?'#dc2626':otos==='clear'?'#b45309':'#16a34a';
+  const otoBg=otos==='none'?'#fff1f2':otos==='clear'?'#fffbeb':'#f0fdf4';
+  const otoBdr=otos==='none'?'#fecaca':otos==='clear'?'#fde68a':'#bbf7d0';
+  const workLabels={'test-only':'Test Only',leaves:'Leaves',brush:'Brush',skimmer:'Skimmer',filter:'Filter'};
+  const workChips=work&&work.length
+    ?work.map(w=>`<span style="display:inline-block;background:#eef2f7;border-radius:16px;padding:5px 12px;font-size:11px;color:#475569;font-weight:600;margin:3px;">✓ ${workLabels[w]||w}</span>`).join('')
+    :'<span style="font-size:13px;color:#64748b;">Maintenance only</span>';
+  const chemText=chemicalsAdded===true?'Yes':'No';
+  const chemColor=chemicalsAdded===true?'#16a34a':'#64748b';
+  const serviceDate=new Date(log.date+'T00:00:00').toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#f0f7ff;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f7ff;padding:30px 20px;">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:18px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.07);">
+  <tr><td style="background:#ffffff;text-align:center;padding:32px 30px 24px;border-bottom:3px solid #4a90e2;">
+    <div style="font-size:32px;font-weight:900;color:#4a90e2;letter-spacing:-1px;margin-bottom:4px;">akaPoolCO</div>
+    <div style="font-size:14px;color:#94a3b8;font-weight:500;">Your Neighborhood Pool Services</div>
+  </td></tr>
+  <tr><td style="padding:20px 30px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fbff;border-radius:10px;">
+      <tr>
+        <td style="padding:14px 18px;font-size:12px;color:#374151;"><strong>Client:</strong> ${pool.ownerName}</td>
+        <td style="padding:14px 18px;font-size:12px;color:#374151;text-align:center;"><strong>Date:</strong> ${serviceDate}</td>
+        <td style="padding:14px 18px;font-size:12px;color:#374151;text-align:right;"><strong>Type:</strong> Quick Visit</td>
+      </tr>
+    </table>
+  </td></tr>
+  <tr><td style="padding:0 30px 10px;"><table width="100%" cellpadding="0" cellspacing="0">
+    <tr><td style="padding:0 0 20px;">
+      <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #e5e7eb;">OTO Chlorine Check</div>
+      <div style="background:${otoBg};border:1px solid ${otoBdr};border-radius:10px;padding:14px 16px;">
+        <span style="font-size:13px;font-weight:700;color:${otoColor};">${otoText}</span>
+      </div>
+    </td></tr>
+    <tr><td style="padding:0 0 20px;">
+      <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #e5e7eb;">Work Performed</div>
+      <div style="line-height:2;">${workChips}</div>
+    </td></tr>
+    <tr><td style="padding:0 0 20px;">
+      <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #e5e7eb;">Chemicals Added</div>
+      <span style="font-size:13px;font-weight:700;color:${chemColor};">${chemText}</span>
+    </td></tr>
+    ${notes?`<tr><td style="padding:0 0 20px;">
+      <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #e5e7eb;">Technician Notes</div>
+      <div style="background:#fdfdfd;border:1px dashed #cbd5e1;border-radius:10px;padding:14px 16px;font-style:italic;color:#64748b;font-size:13px;">"${notes}"</div>
+    </td></tr>`:''}
+  </table></td></tr>
+  <tr><td style="border-top:1px solid #e5e7eb;padding:20px 30px;text-align:center;background:#fafafa;border-radius:0 0 18px 18px;">
+    <div style="font-size:12px;font-weight:700;color:#475569;margin-bottom:4px;">akaPoolCO Pool Services</div>
+    <div style="font-size:11px;color:#94a3b8;">Granite Bay, CA &nbsp;·&nbsp; 916.644.0416 &nbsp;·&nbsp; akapoolco.gb@gmail.com</div>
+  </td></tr>
+</table></td></tr></table>
+</body></html>`;
+}
+
 function buildHTMLEmail(pool,log,fcStatus,clDose,acidDose,saltDose,cyaDose,csi,cs,includeNotes){
   const {fc,tc,cc,ph,ta,ch,cya,salt,temp,work,notes,clAdded,acidAdded}=log;
-
-  // ── Chemistry cards ──
-  const chemCards=[
-    {lbl:'Free Chlorine',val:fc??'—',unit:'ppm',target:pool.targetFC||6},
-    {lbl:'pH Level',     val:ph??'—',unit:'',   target:pool.targetPH||7.4},
-    {lbl:'Alkalinity',   val:ta??'—',unit:'ppm',target:null},
-    {lbl:'Calcium',      val:ch??'—',unit:'ppm',target:null},
-    {lbl:'Stabilizer',   val:cya??'—',unit:'ppm',target:pool.targetCYA||70},
-    {lbl:'Salt Level',   val:salt??'—',unit:'ppm',target:pool.isSWG?(pool.saltTarget||3200):null}
-  ];
 
   // ── CSI status colours ──
   const csiNum=csi!==null?(csi>0?'+':'')+csi:'N/A';
@@ -2042,13 +2211,6 @@ function buildHTMLEmail(pool,log,fcStatus,clDose,acidDose,saltDose,cyaDose,csi,c
     ? work.map(w=>`<span style="display:inline-block;background:#eef2f7;border-radius:16px;padding:5px 12px;font-size:11px;color:#475569;font-weight:600;margin:3px;">✓ ${workLabels[w]||w}</span>`).join('')
     : '<span style="font-size:13px;color:#64748b;">Routine service</span>';
 
-  // ── Chemicals row ──
-  const clNote=clAdded>0?`${clAdded} oz added`:clDose>0?`${clDose} oz rec.`:'None needed';
-  const acidNote=acidAdded>0?`${acidAdded} oz added`:acidDose>0?`${acidDose} oz rec.`:'None needed';
-  let chemsText=`Chlorine: ${clNote} &nbsp;·&nbsp; Muriatic Acid: ${acidNote}`;
-  if(saltDose>0) chemsText+=` &nbsp;·&nbsp; Salt: ${saltDose} lbs rec.`;
-  if(cyaDose>0)  chemsText+=` &nbsp;·&nbsp; CYA: ${cyaDose} lbs rec.`;
-
   // ── Notes section (only if toggled on) ──
   const notesSection=includeNotes&&notes
     ?`<tr><td style="padding:0 0 24px;">
@@ -2085,45 +2247,71 @@ function buildHTMLEmail(pool,log,fcStatus,clDose,acidDose,saltDose,cyaDose,csi,c
   <!-- BODY -->
   <tr><td style="padding:0 30px 10px;"><table width="100%" cellpadding="0" cellspacing="0">
 
-    <!-- CHEMISTRY SECTION -->
+    <!-- CHEMISTRY SECTION — dosing-panel style rows -->
     <tr><td style="padding:0 0 20px;">
       <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #e5e7eb;">
         Water Chemistry &amp; Balance
       </div>
-      <table width="100%" cellpadding="0" cellspacing="0">
-        <tr>
-          ${chemCards.slice(0,3).map(c=>`<td width="33%" style="padding:0 4px 8px 0;"><div style="background:#fff;border:1px solid #eef2f7;border-radius:10px;padding:12px 8px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.03);">
-            <div style="font-size:10px;color:#94a3b8;font-weight:600;margin-bottom:6px;text-transform:uppercase;">${c.lbl}</div>
-            <div style="font-size:20px;font-weight:700;color:#1e293b;">${c.val}${c.unit?`<span style="font-size:12px;"> ${c.unit}</span>`:''}</div>
-            ${c.target?`<div style="font-size:9px;color:#94a3b8;margin-top:3px;">target: ${c.target}</div>`:''}
-          </div></td>`).join('')}
+      <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+        <!-- header row -->
+        <tr style="background:#f8fafc;">
+          <td style="padding:7px 10px;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;border-bottom:1px solid #e5e7eb;">Parameter</td>
+          <td style="padding:7px 10px;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;border-bottom:1px solid #e5e7eb;text-align:center;">Reading</td>
+          <td style="padding:7px 10px;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;border-bottom:1px solid #e5e7eb;text-align:center;">Target</td>
+          <td style="padding:7px 10px;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;border-bottom:1px solid #e5e7eb;text-align:right;">Status</td>
         </tr>
-        <tr>
-          ${chemCards.slice(3,6).map(c=>`<td width="33%" style="padding:0 4px 8px 0;"><div style="background:#fff;border:1px solid #eef2f7;border-radius:10px;padding:12px 8px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.03);">
-            <div style="font-size:10px;color:#94a3b8;font-weight:600;margin-bottom:6px;text-transform:uppercase;">${c.lbl}</div>
-            <div style="font-size:20px;font-weight:700;color:#1e293b;">${c.val}${c.unit?`<span style="font-size:12px;"> ${c.unit}</span>`:''}</div>
-            ${c.target?`<div style="font-size:9px;color:#94a3b8;margin-top:3px;">target: ${c.target}</div>`:''}
-          </div></td>`).join('')}
-        </tr>
-      </table>
-      <!-- CSI + FC status row -->
-      <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:6px;">
-        <tr>
-          <td width="60%" style="padding-right:6px;">
-            <div style="background:${csiBg};border:1px solid ${csiBdr};border-radius:10px;padding:12px 16px;">
-              <span style="font-size:12px;font-weight:700;color:${csiColor};">Saturation Index (CSI): ${csiNum}</span>
-              <span style="font-size:12px;color:${csiColor};margin-left:8px;">${cs.text}</span>
-            </div>
+        ${[
+          {lbl:'Free Chlorine (FC)', val:fc, unit:'ppm', target:pool.targetFC||6,
+           ok:fc!=null&&fc>=(pool.targetFC||6)*0.8&&fc<8,
+           warn:fc!=null&&(fc<2||fc>8),
+           action: fc!=null&&fc<2?'CRITICAL':fc!=null&&fc<(pool.targetFC||6)?`Add ${calcChlorineDose(fc,pool.targetFC||6,pool.volume||15000)} oz`:fc!=null&&fc>8?'High — do not add':'OK'},
+          {lbl:'pH', val:ph, unit:'', target:pool.targetPH||7.4,
+           ok:ph!=null&&ph>=7.2&&ph<=7.8, warn:ph!=null&&(ph<7.0||ph>8.0),
+           action:ph!=null&&ph>7.8?`Add ${calcAcidDose(ph,pool.targetPH||7.4,ta,pool.volume||15000)} oz acid`:ph!=null&&ph<7.2?'Add pH Up':'OK'},
+          {lbl:'Total Alkalinity', val:ta, unit:'ppm', target:pool.targetTA||80,
+           ok:ta!=null&&ta>=60&&ta<=120, warn:ta!=null&&(ta<40||ta>160), action:''},
+          {lbl:'Calcium Hardness', val:ch, unit:'ppm', target:null,
+           ok:ch!=null&&ch>=200&&ch<=400, warn:ch!=null&&(ch<150||ch>500), action:''},
+          {lbl:'CYA (Stabilizer)',  val:cya, unit:'ppm', target:pool.targetCYA||70,
+           ok:cya!=null&&cya>=(pool.targetCYA||70)-10&&cya<=(pool.targetCYA||70)+20,
+           warn:cya!=null&&cya>(pool.targetCYA||70)+30, action:''},
+          ...(pool.isSWG?[{lbl:'Salt Level', val:salt, unit:'ppm', target:pool.saltTarget||3200,
+           ok:salt!=null&&salt>=(pool.saltTarget||3200)-100&&salt<=(pool.saltTarget||3200)+300,
+           warn:salt!=null&&(salt<2500||salt>4000), action:''}]:[])
+        ].map((r,i)=>{
+          const rowBg=i%2===0?'#ffffff':'#f8fafc';
+          const statusColor=r.val==null?'#94a3b8':r.warn?'#dc2626':r.ok?'#16a34a':'#b45309';
+          const statusBg=r.val==null?'#f1f5f9':r.warn?'#fff1f2':r.ok?'#f0fdf4':'#fffbeb';
+          const statusLabel=r.val==null?'—':r.warn?'⚠️ Action':r.ok?'✓ OK':'! Check';
+          return `<tr style="background:${rowBg};">
+            <td style="padding:9px 10px;font-size:12px;color:#374151;font-weight:600;border-bottom:1px solid #f1f5f9;">${r.lbl}</td>
+            <td style="padding:9px 10px;font-size:13px;font-weight:700;color:#1e293b;text-align:center;border-bottom:1px solid #f1f5f9;font-family:monospace;">${r.val!=null?r.val+''+r.unit:'—'}</td>
+            <td style="padding:9px 10px;font-size:11px;color:#64748b;text-align:center;border-bottom:1px solid #f1f5f9;">${r.target!=null?r.target+' '+r.unit:'—'}</td>
+            <td style="padding:9px 10px;text-align:right;border-bottom:1px solid #f1f5f9;">
+              <span style="background:${statusBg};color:${statusColor};font-size:10px;font-weight:700;padding:3px 8px;border-radius:12px;">${statusLabel}</span>
+              ${r.action&&r.action!=='OK'?`<div style="font-size:10px;color:${statusColor};margin-top:2px;">${r.action}</div>`:''}
+            </td>
+          </tr>`;
+        }).join('')}
+        <!-- CSI row -->
+        <tr style="background:#f0fdf4;">
+          <td style="padding:9px 10px;font-size:12px;color:#374151;font-weight:600;">CSI (Water Balance)</td>
+          <td style="padding:9px 10px;font-size:13px;font-weight:700;text-align:center;font-family:monospace;color:${csiColor};">${csiNum}</td>
+          <td style="padding:9px 10px;font-size:11px;color:#64748b;text-align:center;">−0.3 to +0.3</td>
+          <td style="padding:9px 10px;text-align:right;">
+            <span style="background:${csiBg};color:${csiColor};font-size:10px;font-weight:700;padding:3px 8px;border-radius:12px;">${cs.text}</span>
           </td>
-          <td width="40%">
-            <div style="background:${fcBg};border:1px solid ${fcBdr};border-radius:10px;padding:12px 16px;text-align:center;">
-              <span style="font-size:12px;font-weight:700;color:${fcTxt};">FC Status: ${fcStatus}</span>
-            </div>
-          </td>
         </tr>
+        <!-- CC row if available -->
+        ${cc!=null?`<tr style="background:#ffffff;">
+          <td style="padding:9px 10px;font-size:12px;color:#374151;font-weight:600;">Combined Chlorine (CC)</td>
+          <td style="padding:9px 10px;font-size:13px;font-weight:700;text-align:center;font-family:monospace;color:${cc>1?'#dc2626':cc>0.5?'#b45309':'#16a34a'};">${cc} ppm</td>
+          <td style="padding:9px 10px;font-size:11px;color:#64748b;text-align:center;">≤ 0.5 ppm</td>
+          <td style="padding:9px 10px;text-align:right;">
+            <span style="background:${cc>1?'#fff1f2':cc>0.5?'#fffbeb':'#f0fdf4'};color:${cc>1?'#dc2626':cc>0.5?'#b45309':'#16a34a'};font-size:10px;font-weight:700;padding:3px 8px;border-radius:12px;">${cc>1?'🚨 Shock':'CC>0.5 — Monitor'||'✓ OK'}</span>
+          </td>
+        </tr>`:''}
       </table>
-      <!-- Chemicals applied -->
-      <div style="margin-top:8px;background:#f8fafc;border-radius:8px;padding:10px 14px;font-size:12px;color:#64748b;">${chemsText}</div>
     </td></tr>
 
     <!-- DEMAND ANALYTICS -->
@@ -2135,6 +2323,12 @@ function buildHTMLEmail(pool,log,fcStatus,clDose,acidDose,saltDose,cyaDose,csi,c
       <div style="line-height:2;">${workChips}</div>
     </td></tr>
 
+    <!-- CHEMICALS ADDED -->
+    <tr><td style="padding:0 0 20px;">
+      <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #e5e7eb;">Chemicals Added</div>
+      <span style="font-size:13px;font-weight:700;color:${log.chemicalsAdded===true?'#16a34a':'#64748b'};">${log.chemicalsAdded===true?'Yes':'No'}</span>
+    </td></tr>
+
     <!-- NOTES (conditional) -->
     ${notesSection}
 
@@ -2142,7 +2336,7 @@ function buildHTMLEmail(pool,log,fcStatus,clDose,acidDose,saltDose,cyaDose,csi,c
 
   <!-- FOOTER -->
   <tr><td style="border-top:1px solid #e5e7eb;padding:20px 30px;text-align:center;background:#fafafa;border-radius:0 0 18px 18px;">
-    <div style="font-size:12px;font-weight:700;color:#475569;margin-bottom:4px;">${settings.bizName||'akaPoolCO Pool Services'}</div>
+    <div style="font-size:12px;font-weight:700;color:#475569;margin-bottom:4px;">akaPoolCO Pool Services</div>
     <div style="font-size:11px;color:#94a3b8;">Granite Bay, CA &nbsp;·&nbsp; 916.644.0416 &nbsp;·&nbsp; akapoolco.gb@gmail.com</div>
   </td></tr>
 
@@ -2441,6 +2635,19 @@ function editPool(idx){
 function toggleNotesReport(){
   notesInReport=!notesInReport;
   document.getElementById('notes-toggle').classList.toggle('on',notesInReport);
+}
+
+function setChemAdded(val){
+  chemAdded=val;
+  document.getElementById('chem-yes').className='chem-yn-btn'+(val===true?' yes-active':'');
+  document.getElementById('chem-no').className ='chem-yn-btn'+(val===false?' no-active':'');
+  document.getElementById('chem-added-err').style.display='none';
+}
+function setQLChemAdded(val){
+  qlChemAdded=val;
+  document.getElementById('ql-chem-yes').className='chem-yn-btn'+(val===true?' yes-active':'');
+  document.getElementById('ql-chem-no').className ='chem-yn-btn'+(val===false?' no-active':'');
+  document.getElementById('ql-chem-added-err').style.display='none';
 }
 
 function toggleSWG(){
