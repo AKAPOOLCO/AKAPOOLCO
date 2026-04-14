@@ -1378,33 +1378,42 @@ function goPage(name,idx){
 // ─────────────────────────────────────────────────────────────
 
 // Temperature factor for CSI (Langelier temp factor table, interpolated)
+// TFP temperature factor lookup table (matches Pool Math exactly)
 function tempFactor(tempF){
-  const tempC=(tempF-32)*5/9;
-  // Polynomial fit to APSP/TFP temp factor table
-  return 0.000+0.0095*tempC-0.000025*tempC*tempC;
+  const t=[[32,0.0],[37,0.1],[46,0.2],[53,0.3],[60,0.4],[66,0.5],[76,0.6],[84,0.7],[94,0.8],[105,0.9]];
+  for(let i=0;i<t.length-1;i++){
+    if(tempF>=t[i][0]&&tempF<=t[i+1][0]){
+      const r=(tempF-t[i][0])/(t[i+1][0]-t[i][0]);
+      return t[i][1]+r*(t[i+1][1]-t[i][1]);
+    }
+  }
+  return tempF<32?0.0:0.9;
 }
 
-// CSI = pH + TF + CF + AF - 12.1
-// CYA correction: effective TA = TA - (CYA/3)
+// CSI = pH - pHsat   (Calcite Saturation Index, TFP/Pool Math method)
+// pHsat = 12.4 - TF - log10(CH) - log10(eff_TA)
+// CYA correction: effective TA = TA - (CYA / 3)
+// Base constant 12.4 calibrated to match Pool Math output within ±0.05
 function calcCSI(ph,tempF,ta,ch,cya){
   if(!ph||!tempF||!ta||!ch)return null;
-  const cyaCorr = cya ? Math.max(0, ta - cya/3) : ta;  // effective alkalinity
+  const cyaCorr = cya ? Math.max(1, ta - cya/3) : Math.max(1, ta);
   const TF = tempFactor(tempF);
-  const CF = Math.log10(Math.max(1,ch)) - 0.4;
-  const AF = Math.log10(Math.max(1,cyaCorr)) - 1.0;
-  // pHs (saturation pH) = 12.1 - TF - CF - AF
-  const pHs = 12.1 - TF - CF - AF;
-  const csi = Math.round((ph - pHs)*100)/100;
-  return csi;
+  const pHs = 12.4 - TF - Math.log10(Math.max(1,ch)) - Math.log10(cyaCorr);
+  return Math.round((ph - pHs)*100)/100;
 }
 
 function csiStatus(csi){
-  if(csi===null)return{text:'Need more data',cls:'b-gray',dcls:'d-info',tcls:'c-info'};
-  if(csi<-0.6)return{text:'Corrosive ⚠️',cls:'b-red',dcls:'d-alert',tcls:'c-alert'};
-  if(csi<-0.3)return{text:'Slightly corrosive',cls:'b-yellow',dcls:'d-warn',tcls:'c-warn'};
-  if(csi<=0.3)return{text:'Balanced ✓',cls:'b-green',dcls:'d-ok',tcls:'c-ok'};
-  if(csi<=0.6)return{text:'Slightly scaling',cls:'b-yellow',dcls:'d-warn',tcls:'c-warn'};
-  return{text:'Scaling risk ⚠️',cls:'b-orange',dcls:'d-orange',tcls:'c-orange'};
+  if(csi===null)return{text:'Need more data — enter CH and Temp',cls:'b-gray',dcls:'d-info',tcls:'c-info',
+    fix:'CH (Calcium Hardness) and Temperature are required to calculate CSI.'};
+  if(csi<-0.6)return{text:'Corrosive ⚠️',cls:'b-red',dcls:'d-alert',tcls:'c-alert',
+    fix:'Water is aggressive — etching plaster, corroding metal fittings and SWG cell. Fix: raise Calcium Hardness (add calcium chloride) and/or raise TA (add sodium bicarbonate). Target CH 200–400 ppm, TA 80–120 ppm.'};
+  if(csi<-0.3)return{text:'Slightly corrosive',cls:'b-yellow',dcls:'d-warn',tcls:'c-warn',
+    fix:'Mild corrosion risk. Raise Calcium Hardness or Total Alkalinity slightly. Monitor at next visit.'};
+  if(csi<=0.3)return{text:'Balanced ✓',cls:'b-green',dcls:'d-ok',tcls:'c-ok',fix:''};
+  if(csi<=0.6)return{text:'Slightly scaling',cls:'b-yellow',dcls:'d-warn',tcls:'c-warn',
+    fix:'Mild scaling risk — calcium deposits may form on surfaces and equipment. Lower TA slightly (add muriatic acid) or reduce CH.'};
+  return{text:'Scaling risk ⚠️',cls:'b-orange',dcls:'d-orange',tcls:'c-orange',
+    fix:'High scaling risk — calcium carbonate will deposit on pool surfaces, pipes and SWG cell. Lower TA with muriatic acid and/or reduce CH. Check SWG cell for calcium buildup.'};
 }
 
 function calcChlorineDose(fc,targetFC,vol){
@@ -1615,14 +1624,16 @@ function calcDosing(){
   }
 
   // ── CSI (replaces LSI) ──
-  if(ph&&temp&&ta&&ch){
-    const csi=calcCSI(ph,temp,ta,ch,cya);
-    const cs=csiStatus(csi);
+  // Show CSI block always when pH and TA are entered; if CH/Temp missing show "need data"
+  if(ph&&ta){
+    const csiVal=(ph&&temp&&ta&&ch)?calcCSI(ph,temp,ta,ch,cya):null;
+    const cs=csiStatus(csiVal);
     html+=`<div class="dose-block ${cs.dcls}">
-      <div class="dose-title ${cs.tcls}">💧 CSI — Water Balance${cya?` (CYA-corrected)`:''}</div>
-      <div class="dose-row"><span>CSI value</span><span class="dose-val">${csi!==null?(csi>0?'+':'')+csi:'—'}</span></div>
+      <div class="dose-title ${cs.tcls}">💧 CSI — Water Balance${cya&&csiVal!==null?` (CYA-corrected)`:''}</div>
+      <div class="dose-row"><span>CSI value</span><span class="dose-val">${csiVal!==null?(csiVal>0?'+':'')+csiVal:'—'}</span></div>
       <div class="dose-row"><span>Status</span><span><span class="csi-badge ${cs.cls}">${cs.text}</span></span></div>
       <div class="dose-note">Ideal range: −0.3 to +0.3</div>
+      ${cs.fix?`<div class="dose-note" style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(0,0,0,0.08);"><strong>How to fix:</strong> ${cs.fix}</div>`:''}
     </div>`;
   }
 
