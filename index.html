@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0f1923">
 <title>akaPoolCO Pool Services</title>
-<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Baguet+Script&family=Figtree:wght@300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 /* ─────────────────────────────────────────
    RESET & TOKENS
@@ -593,12 +593,21 @@ a{color:var(--accent);}
 <body>
 
 <!-- ══════════════════════════════════════════
+     QA ENGINE HEALTH BANNER
+     Hidden until calcDosing() fires — flashes green 2s if healthy,
+     stays red/black if engine math is broken or crashed.
+══════════════════════════════════════════ -->
+<div id="qa-banner" style="display:none;position:fixed;top:0;left:0;width:100%;z-index:9999;padding:8px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:bold;transition:all 0.3s ease;">
+  <span id="qa-message"></span>
+</div>
+
+<!-- ══════════════════════════════════════════
      LOCK SCREEN
 ══════════════════════════════════════════ -->
 <div id="lock-screen">
   <div style="width:100%;max-width:320px;padding:28px 22px;text-align:center;">
     <div style="font-size:52px;margin-bottom:14px;">🏊</div>
-    <div style="font-size:28px;font-weight:900;letter-spacing:-.6px;margin-bottom:4px;">akaPoolCO</div>
+    <div style="margin-bottom:6px;line-height:1;letter-spacing:0;"><span style="font-family:'Baguet Script','Dancing Script',cursive;font-size:26px;color:#e53935;vertical-align:baseline;">aka</span><span style="font-family:'Aptos Black','Arial Black','Helvetica Neue',sans-serif;font-size:38px;font-weight:900;color:#4a90e2;vertical-align:baseline;">Pool</span><span style="font-family:Broadway,Impact,'Arial Narrow',fantasy;font-size:38px;color:#f57c00;vertical-align:baseline;">CO</span></div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:26px;font-family:var(--mono);">Pool Services</div>
     <div class="form-group">
       <input class="form-input" type="password" id="lock-pin"
@@ -1745,6 +1754,7 @@ function calcCC(){
 // Reads DOM → calls ChemEngine.calcAll() once → renders results.
 // Identical math path as submitService() — what you see = what gets emailed.
 function calcDosing(){
+  QA.verify(); // ← Security Guard: checks 3 golden scenarios before rendering
   const poolId = document.getElementById('svc-pool-id').value;
   const pool   = pools.find(p=>p.id===poolId);
   if(!pool) return;
@@ -2295,13 +2305,13 @@ function buildQuickHTMLEmail(pool,log){
   const chemText=chemicalsAdded===true?'Yes':'No';
   const chemColor=chemicalsAdded===true?'#16a34a':'#64748b';
   const serviceDate=new Date(log.date+'T00:00:00').toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"></head>
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><link href="https://fonts.googleapis.com/css2?family=Baguet+Script&display=swap" rel="stylesheet"></head>
 <body style="margin:0;padding:0;background:#f0f7ff;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f7ff;padding:30px 20px;">
 <tr><td align="center">
 <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:18px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.07);">
   <tr><td style="background:#ffffff;text-align:center;padding:32px 30px 24px;border-bottom:3px solid #4a90e2;">
-    <div style="font-size:32px;font-weight:900;color:#4a90e2;letter-spacing:-1px;margin-bottom:4px;">akaPoolCO</div>
+    <div style="margin-bottom:6px;line-height:1;letter-spacing:0;"><span style="font-family:'Baguet Script','Dancing Script',cursive;font-size:40px;color:#e53935;vertical-align:baseline;">aka</span><span style="font-family:'Aptos Black','Arial Black','Helvetica Neue',sans-serif;font-size:60px;font-weight:900;color:#4a90e2;vertical-align:baseline;">Pool</span><span style="font-family:Broadway,Impact,'Arial Narrow',fantasy;font-size:60px;color:#f57c00;vertical-align:baseline;">CO</span></div>
     <div style="font-size:14px;color:#94a3b8;font-weight:500;">Your Neighborhood Pool Services</div>
   </td></tr>
   <tr><td style="padding:20px 30px;">
@@ -2404,7 +2414,7 @@ function buildHTMLEmail(pool,log,fcStatus,clDose,acidDose,saltDose,cyaDose,csi,c
 
   const serviceDate=new Date(log.date+'T00:00:00').toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
 
-  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link href="https://fonts.googleapis.com/css2?family=Baguet+Script&display=swap" rel="stylesheet"></head>
 <body style="margin:0;padding:0;background:#f0f7ff;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f7ff;padding:30px 20px;">
 <tr><td align="center">
@@ -2412,7 +2422,7 @@ function buildHTMLEmail(pool,log,fcStatus,clDose,acidDose,saltDose,cyaDose,csi,c
 
   <!-- HEADER -->
   <tr><td style="background:#ffffff;text-align:center;padding:32px 30px 24px;border-bottom:3px solid #4a90e2;">
-    <div style="font-size:32px;font-weight:900;color:#4a90e2;letter-spacing:-1px;margin-bottom:4px;">${settings.bizName||'akaPoolCO'}</div>
+    <div style="margin-bottom:6px;line-height:1;letter-spacing:0;"><span style="font-family:'Baguet Script','Dancing Script',cursive;font-size:40px;color:#e53935;vertical-align:baseline;">aka</span><span style="font-family:'Aptos Black','Arial Black','Helvetica Neue',sans-serif;font-size:60px;font-weight:900;color:#4a90e2;vertical-align:baseline;">Pool</span><span style="font-family:Broadway,Impact,'Arial Narrow',fantasy;font-size:60px;color:#f57c00;vertical-align:baseline;">CO</span></div>
     <div style="font-size:14px;color:#94a3b8;font-weight:500;">Your Neighborhood Pool Services</div>
   </td></tr>
 
@@ -3021,6 +3031,96 @@ function sopToggle(headerEl){
 function openSheet(id){document.getElementById(id).classList.add('open');}
 function closeSheet(id){document.getElementById(id).classList.remove('open');}
 document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
+
+// ═════════════════════════════════════════════════════════════
+//  QA ENGINE HEALTH GUARD
+//  Runs 3 "Golden Scenarios" with known exact answers every time
+//  the dosing panel fires. Flashes green 2s if all pass.
+//  Stays RED if any golden answer drifts by more than ±0.05.
+//  Stays BLACK if the engine throws an exception.
+//
+//  Golden values are locked from the 8/8 TFP audit run on
+//  2025-04-15 against ChemEngine v4. Do not change them without
+//  re-running the full test suite and updating all three entries.
+// ═════════════════════════════════════════════════════════════
+const QA = {
+
+  golden: [
+    {
+      // Balanced SWG summer pool — CSI near zero, no liquid Cl dose
+      name: 'Balanced SWG Summer',
+      pool: { volume:15000, isSWG:true, targetFC:5, targetPH:7.4,
+               saltTarget:3200, targetCYA:70 },
+      r:    { fc:5, ph:7.4, ta:90, ch:350, cya:70, salt:3200, temp:82 },
+      expect: { csiVal:0.04, clDose:0, fcStatus:'OK' }
+    },
+    {
+      // Low-FC liquid chlorine pool — should calculate a real dose
+      name: 'Liquid Cl Low FC',
+      pool: { volume:15000, isSWG:false, targetFC:6, targetPH:7.4,
+               saltTarget:null, targetCYA:50 },
+      r:    { fc:2, ph:7.4, ta:80, ch:250, cya:50, salt:null, temp:80 },
+      expect: { csiVal:-0.15, clDose:78, fcStatus:'LOW' }
+    },
+    {
+      // Corrosive winter water — CSI must flag corrosive
+      name: 'Corrosive Winter',
+      pool: { volume:15000, isSWG:false, targetFC:4, targetPH:7.4,
+               saltTarget:null, targetCYA:40 },
+      r:    { fc:3, ph:7.2, ta:80, ch:225, cya:40, salt:null, temp:55 },
+      expect: { csiVal:-0.70, clDose:19, fcStatus:'LOW' }
+    }
+  ],
+
+  verify(){
+    const banner = document.getElementById('qa-banner');
+    const msg    = document.getElementById('qa-message');
+    const MARGIN = 0.05;   // CSI tolerance: ±0.05
+
+    try {
+      let failures = [];
+
+      this.golden.forEach(test => {
+        // Use live settings.clStrength and settings.minDose — not hardcoded values
+        const R = ChemEngine.calcAll(test.pool, test.r,
+                                     settings.clStrength,
+                                     settings.minDose);
+
+        const csiOk  = R.csiVal !== null &&
+                       Math.abs(R.csiVal - test.expect.csiVal) <= MARGIN;
+        const doseOk = R.clDose === test.expect.clDose;
+        const fcOk   = R.fcStatus === test.expect.fcStatus;
+
+        if(!csiOk || !doseOk || !fcOk){
+          failures.push(
+            `${test.name}: ` +
+            (!csiOk  ? `CSI got ${R.csiVal} exp ${test.expect.csiVal} ` : '') +
+            (!doseOk ? `dose got ${R.clDose} exp ${test.expect.clDose} ` : '') +
+            (!fcOk   ? `fcStatus got ${R.fcStatus} exp ${test.expect.fcStatus}` : '')
+          );
+        }
+      });
+
+      if(failures.length === 0){
+        // All golden scenarios pass — flash green then hide
+        banner.style.cssText='display:block;position:fixed;top:0;left:0;width:100%;z-index:9999;padding:8px;text-align:center;font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:bold;background:#059669;color:#fff;';
+        msg.textContent = '✓ ENGINE CALIBRATED — all 3 golden scenarios match TFP standards';
+        setTimeout(()=>{ banner.style.display='none'; }, 2000);
+      } else {
+        // One or more golden answers wrong — stay red, don't auto-hide
+        banner.style.cssText='display:block;position:fixed;top:0;left:0;width:100%;z-index:9999;padding:8px;text-align:center;font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:bold;background:#dc2626;color:#fff;';
+        msg.textContent = '🚨 MATH ERROR — ENGINE OUT OF CALIBRATION: ' + failures.join(' | ');
+      }
+
+    } catch(e) {
+      // Engine threw — black banner, stays up
+      banner.style.cssText='display:block;position:fixed;top:0;left:0;width:100%;z-index:9999;padding:8px;text-align:center;font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:bold;background:#000;color:#ff0;';
+      msg.textContent = '⚠️ CRITICAL ENGINE CRASH — ' + (e.message||String(e));
+      console.error('QA crash:', e);
+    }
+  }
+};
+
 </script>
 </body>
 </html>
