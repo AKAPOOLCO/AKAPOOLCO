@@ -737,7 +737,11 @@ a{color:var(--accent);}
         <div class="form-group"><label class="form-label">Public Key <span style="font-weight:400;color:var(--hint);">(from EmailJS → Account → API Keys)</span></label><input class="form-input" id="ejs-key" placeholder="your_public_key"></div>
         <div class="form-group"><label class="form-label">Your Business Name</label><input class="form-input" id="biz-name" placeholder="Mike's Pool Service"></div>
         <button class="btn btn-primary btn-full" onclick="saveEmail()">Save Email Settings</button>
-        <button class="btn btn-ghost btn-full" style="margin-top:8px;" onclick="sendTestEmail()">📨 Send Test Email to Myself</button>
+        <div class="form-group" style="margin-top:8px;">
+          <label class="form-label">Test Email Address <span style="font-weight:400;color:var(--hint);">send a test to yourself</span></label>
+          <input class="form-input" type="email" id="test-email-addr" placeholder="your@email.com">
+        </div>
+        <button class="btn btn-ghost btn-full" onclick="sendTestEmail()">📨 Send Test Email</button>
         <div id="email-msg" style="font-size:12px;text-align:center;margin-top:7px;display:none;"></div>
       </div>
 
@@ -750,8 +754,8 @@ a{color:var(--accent);}
             <input class="form-input" type="number" id="min-dose" placeholder="4">
           </div>
           <div class="form-group">
-            <label class="form-label">Liquid Cl strength <span style="font-weight:400;color:var(--hint);">e.g. 0.10 = 10%</span></label>
-            <input class="form-input" type="number" step="0.01" id="cl-str" placeholder="0.10">
+            <label class="form-label">Liquid Cl Strength (%) <span style="font-weight:400;color:var(--hint);">as shown on bottle</span></label>
+            <input class="form-input" type="number" step="1" min="1" max="100" id="cl-str" placeholder="10">
           </div>
         </div>
         <button class="btn btn-ghost btn-full" onclick="saveDefaults()">Save Defaults</button>
@@ -1288,7 +1292,39 @@ a{color:var(--accent);}
 </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>
+/* EmailJS v4 — minimal inline shim (no CDN required)
+   Implements only emailjs.init() and emailjs.send() — the only two methods
+   used by this app. Functionally identical to the full SDK for this use case.
+   Sends to https://api.emailjs.com/api/v1.0/email/send — network required
+   only at the moment of sending, not on app load. */
+const emailjs = (function(){
+  let _key = '';
+  return {
+    init(opts){
+      if(opts && opts.publicKey) _key = opts.publicKey;
+    },
+    send(serviceId, templateId, params, opts){
+      const key = (opts && opts.publicKey) || _key;
+      if(!key) return Promise.reject({text:'EmailJS public key not set'});
+      return fetch('https://api.emailjs.com/api/v1.0/email/send',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          service_id:    serviceId,
+          template_id:   templateId,
+          user_id:       key,
+          accessToken:   key,
+          template_params: params
+        })
+      }).then(res=>{
+        if(!res.ok) return res.text().then(t=>Promise.reject({status:res.status,text:t}));
+        return res;
+      });
+    }
+  };
+})();
+</script>
 <script>
 'use strict';
 // ─────────────────────────────────────────────────────────────
@@ -1305,7 +1341,7 @@ const S={
 let pools       = S.get('pools')    || [];
 let inventory   = S.get('inv')      || [];
 let logs        = S.get('logs')     || [];
-let settings    = S.get('settings') || {pin:'1234',bizName:'Pool Service',minDose:4,clStrength:.10,season:'summer',defFC:6};
+let settings    = S.get('settings') || {pin:'1234',bizName:'akaPoolCO Pool Services',minDose:4,clStrength:.10,season:'summer',defFC:6};
 let emailCfg    = S.get('email')    || {svcId:'',tplId:'',pubKey:''};
 let sortMode    = 'date';
 let freqFilter  = 'all';
@@ -2971,18 +3007,22 @@ function deletePool(){
 // ─────────────────────────────────────────────────────────────
 function saveEmail(){
   emailCfg={svcId:document.getElementById('ejs-svc').value.trim(),tplId:document.getElementById('ejs-tpl').value.trim(),pubKey:document.getElementById('ejs-key').value.trim()};
-  settings.bizName=document.getElementById('biz-name').value.trim()||'Pool Service';
+  settings.bizName=document.getElementById('biz-name').value.trim()||'akaPoolCO Pool Services';
   S.set('email',emailCfg);S.set('settings',settings);
   if(emailCfg.pubKey)try{emailjs.init({publicKey:emailCfg.pubKey});}catch{}
   showMsg('email-msg','✅ Email settings saved','g');
 }
 async function sendTestEmail(){
   if(!emailCfg.pubKey||!emailCfg.svcId||!emailCfg.tplId){
-    showMsg('email-msg','❌ Fill in and save all 3 keys first','r');return;
+    showMsg('email-msg','❌ Fill in and Save all 3 EmailJS keys first','r');return;
   }
-  const testAddr=prompt('Enter email address to send the test to:');
-  if(!testAddr||!testAddr.includes('@')){showMsg('email-msg','❌ No valid email entered','r');return;}
-  showMsg('email-msg','📨 Sending test...','g');
+  const testAddr=(document.getElementById('test-email-addr').value||'').trim();
+  if(!testAddr||!testAddr.includes('@')){
+    showMsg('email-msg','❌ Enter a valid email address above first','r');
+    document.getElementById('test-email-addr').focus();
+    return;
+  }
+  showMsg('email-msg','📨 Sending...','g');
   try{
     await emailjs.send(emailCfg.svcId,emailCfg.tplId,{
       email:testAddr,
@@ -3001,8 +3041,8 @@ Template ID: ${emailCfg.tplId}
 
 Your BCC copy (if set in EmailJS template) will arrive at your BCC address.`,
       biz_name:settings.bizName||'akaPoolCO Pool Services'
-    });
-    showMsg('email-msg','✅ Test sent to '+testAddr+' — check inbox & BCC address!','g');
+    },{publicKey:emailCfg.pubKey});
+    showMsg('email-msg','✅ Sent to '+testAddr+' — check inbox!','g');
   }catch(err){
     const errText=err.text||err.message||JSON.stringify(err);
     showMsg('email-msg','❌ Failed: '+errText,'r');
@@ -3013,24 +3053,26 @@ function loadEmailFields(){
   document.getElementById('ejs-svc').value=emailCfg.svcId||'';
   document.getElementById('ejs-tpl').value=emailCfg.tplId||'';
   document.getElementById('ejs-key').value=emailCfg.pubKey||'';
-  document.getElementById('biz-name').value=settings.bizName||'';
+  document.getElementById('biz-name').value=settings.bizName||'akaPoolCO Pool Services';
 }
 function saveDefaults(){
   settings.minDose=parseFloat(document.getElementById('min-dose').value)||4;
   // Auto-correct: if user typed a percentage (e.g. 10) instead of a decimal (0.10), fix it.
+  // User enters percentage (e.g. 10), store as decimal (0.10) internally
   const _rawStr=parseFloat(document.getElementById('cl-str').value);
-  settings.clStrength=(_rawStr>1) ? Math.round(_rawStr)/100 : (_rawStr>0 ? _rawStr : 0.10);
-  // Write the corrected value back so the input always shows the decimal form
-  document.getElementById('cl-str').value=settings.clStrength;
+  settings.clStrength=(_rawStr>0) ? _rawStr/100 : 0.10;
+  // Write the percentage back so the field always shows what the bottle says
+  document.getElementById('cl-str').value=Math.round(settings.clStrength*100);
   // season is saved immediately on click via setSeason(); no extra read needed
   S.set('settings',settings);
   alert('✅ Defaults saved!');
 }
 function loadDefaultFields(){
   document.getElementById('min-dose').value=settings.minDose||4;
-  // Auto-correct stored clStrength > 1 (e.g. 10 → 0.10) before displaying
+  // Display as percentage (e.g. 0.10 stored → show 10 in the field)
+  // Auto-correct any old value > 1 that was stored as a raw percentage
   if(settings.clStrength>1){ settings.clStrength=Math.round(settings.clStrength)/100; S.set('settings',settings); }
-  document.getElementById('cl-str').value=settings.clStrength||0.10;
+  document.getElementById('cl-str').value=Math.round((settings.clStrength||0.10)*100);
 
 }
 
