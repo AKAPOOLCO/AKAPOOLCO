@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0f1923">
-<title>akaPoolCO Pool Services</title>
+<title>akaPoolCO Pool Services v5</title>
 <link href="https://fonts.googleapis.com/css2?family=Baguet+Script&family=Figtree:wght@300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 /* ─────────────────────────────────────────
@@ -834,7 +834,7 @@ a{color:var(--accent);}
 
       </div>
 
-      <div style="text-align:center;font-size:11px;color:var(--hint);padding:14px 0 4px;">akaPoolCO v4 · localStorage only</div>
+      <div style="text-align:center;font-size:11px;color:var(--hint);padding:14px 0 4px;">akaPoolCO v5 · localStorage only</div>
     </div>
 
   </div><!-- /content -->
@@ -1216,6 +1216,7 @@ a{color:var(--accent);}
     <textarea class="form-textarea" id="ql-notes" placeholder="Brief observation..." style="min-height:50px;"></textarea>
   </div>
 
+  <div id="ql-msg" style="display:none;font-size:12px;color:var(--red);margin-top:6px;text-align:center;"></div>
   <div class="flex gap8 mt12" style="margin-top:10px;">
     <button class="btn btn-ghost" style="flex:1;" onclick="closeSheet('quick-sheet')">Cancel</button>
     <button class="btn btn-teal" style="flex:2;" onclick="submitQuickLog()">Save Quick Log</button>
@@ -2219,6 +2220,7 @@ async function submitQuickLog(){
     if(qlBtn){qlBtn.innerHTML='<span class="spinner"></span>';qlBtn.disabled=true;}
     try{
       const qlBody=buildQuickHTMLEmail(pool,log);
+      // Pass publicKey directly — self-contained, no dependency on emailjs.init() state
       await emailjs.send(emailCfg.svcId,emailCfg.tplId,{
         email:pool.email,
         to_email:pool.email,
@@ -2229,9 +2231,17 @@ async function submitQuickLog(){
         status:'Quick Visit',
         email_body:qlBody,
         biz_name:settings.bizName||'akaPoolCO Pool Services'
-      });
+      },{publicKey:emailCfg.pubKey});
     }catch(err){
-      console.warn('Quick Log email failed:',err.text||err);
+      // Show error visibly (previously was silent console.warn only)
+      const errText=err.text||err.message||JSON.stringify(err);
+      const qlMsg=document.getElementById('ql-msg');
+      if(qlMsg){qlMsg.textContent='❌ Email failed: '+errText;qlMsg.style.display='block';}
+      console.warn('Quick Log email failed:',errText);
+      if(qlBtn){qlBtn.innerHTML='Save Quick Log';qlBtn.disabled=false;}
+      // Stay open briefly so user can read error
+      setTimeout(()=>{closeSheet('quick-sheet');renderRoute();renderDashboard();updateBadge();},4000);
+      return;
     }
     if(qlBtn){qlBtn.innerHTML='Save Quick Log';qlBtn.disabled=false;}
   }
@@ -2276,12 +2286,22 @@ async function submitService(){
                        settings.clStrength, settings.minDose);
 
   // Try email
-  if(emailCfg.pubKey&&emailCfg.svcId&&pool.email){
+  if(!emailCfg.pubKey||!emailCfg.svcId){
+    // EmailJS not configured at all
+    showMsg('svc-msg','✅ Log saved (EmailJS not set up in Settings)','g');
+    setTimeout(()=>{closeSheet('service-sheet');renderRoute();renderDashboard();updateBadge();},1800);
+  } else if(!pool.email){
+    // Pool profile has no client email address
+    showMsg('svc-msg','✅ Log saved (no email on pool profile — add one to send reports)','g');
+    setTimeout(()=>{closeSheet('service-sheet');renderRoute();renderDashboard();updateBadge();},1800);
+  } else {
+    // All conditions met — attempt send
     const btn=document.getElementById('svc-btn');
     btn.innerHTML='<span class="spinner"></span> Sending...';btn.disabled=true;
-    const clientBody=buildHTMLEmail(pool,log,fcStatus,clDose,acidDose,saltDose,cyaDose,csi,cs,notesInReport);
     try{
-      // Single send — your copy comes via BCC set in your EmailJS template
+      // buildHTMLEmail inside try so any rendering error is caught and shown
+      const clientBody=buildHTMLEmail(pool,log,fcStatus,clDose,acidDose,saltDose,cyaDose,csi,cs,notesInReport);
+      // Pass publicKey directly — self-contained, no dependency on emailjs.init() state
       await emailjs.send(emailCfg.svcId,emailCfg.tplId,{
         email:pool.email,
         to_email:pool.email,
@@ -2292,7 +2312,7 @@ async function submitService(){
         status:fcStatus,
         email_body:clientBody,
         biz_name:settings.bizName||'Pool Service'
-      });
+      },{publicKey:emailCfg.pubKey});
       showMsg('svc-msg','✅ Email sent to '+pool.ownerName,'g');
       btn.innerHTML='Submit & Email Client';btn.disabled=false;
       setTimeout(()=>{closeSheet('service-sheet');renderRoute();renderDashboard();updateBadge();},1800);
@@ -2300,12 +2320,8 @@ async function submitService(){
       const errText=err.text||err.message||JSON.stringify(err);
       showMsg('svc-msg','❌ Email failed: '+errText+' — check Settings','r');
       btn.innerHTML='Submit & Email Client';btn.disabled=false;
-      // Stay open 5 seconds so you can read the error, then close
       setTimeout(()=>{closeSheet('service-sheet');renderRoute();renderDashboard();updateBadge();},5000);
     }
-  } else {
-    showMsg('svc-msg','✅ Log saved! (Email not configured in Settings)','g');
-    setTimeout(()=>{closeSheet('service-sheet');renderRoute();renderDashboard();updateBadge();},1800);
   }
 }
 
