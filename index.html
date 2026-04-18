@@ -2720,41 +2720,46 @@ function buildSkipHTMLEmail(pool,log){
   };
   const reasonText=reasonMap[log.skipReason]||log.skipReason||'Not specified';
   const serviceDate=new Date(log.date+'T00:00:00').toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#f0f7ff;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f7ff;padding:30px 20px;">
-<tr><td align="center">
-<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:18px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.07);">
-  <tr><td style="background:#ffffff;text-align:center;padding:32px 30px 24px;border-bottom:3px solid #4a90e2;">
-    <div style="margin-bottom:8px;line-height:1;">
-    <span style="font-family:Georgia,serif;font-size:38px;color:#e53935;font-style:italic;">aka</span><span style="font-family:Arial Black,sans-serif;font-size:52px;font-weight:900;color:#1A5CC7;">Pool</span><span style="font-family:Impact,Arial Narrow,sans-serif;font-size:52px;color:#f57c00;">CO</span>
-  </div>
-    <div style="font-size:14px;color:#94a3b8;font-weight:500;">Your Neighborhood Pool Services</div>
-  </td></tr>
-  <tr><td style="padding:20px 30px;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fbff;border-radius:10px;">
-      <tr>
-        <td style="padding:14px 18px;font-size:12px;color:#374151;"><strong>Client:</strong> \${pool.ownerName}</td>
-        <td style="padding:14px 18px;font-size:12px;color:#374151;text-align:center;"><strong>Date:</strong> \${serviceDate}</td>
-        <td style="padding:14px 18px;font-size:12px;color:#374151;text-align:right;"><strong>Type:</strong> Service Not Provided</td>
-      </tr>
-    </table>
-  </td></tr>
-  <tr><td style="padding:0 30px 20px;"><table width="100%" cellpadding="0" cellspacing="0">
-    <tr><td style="padding:0 0 20px;">
-      <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #e5e7eb;">Reason for Non-Service</div>
-      <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:14px 16px;">
-        <span style="font-size:13px;font-weight:700;color:#b45309;">\${reasonText}</span>
-      </div>
-    </td></tr>
-    \${log.notes?'<tr><td style="padding:0 0 20px;"><div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #e5e7eb;">Notes</div><div style="background:#fdfdfd;border:1px dashed #cbd5e1;border-radius:10px;padding:14px 16px;font-style:italic;color:#64748b;font-size:13px;">&ldquo;'+log.notes+'&rdquo;</div></td></tr>':''}
-  </table></td></tr>
-  <tr><td style="border-top:1px solid #e5e7eb;padding:20px 30px;text-align:center;background:#fafafa;border-radius:0 0 18px 18px;">
-    <div style="font-size:12px;font-weight:700;color:#475569;margin-bottom:4px;">akaPoolCO Pool Services</div>
-    <div style="font-size:11px;color:#94a3b8;">Granite Bay, CA &nbsp;·&nbsp; 916.644.0416 &nbsp;·&nbsp; akapoolco.gb@gmail.com</div>
-  </td></tr>
-</table></td></tr></table>
-</body></html>`;
+  const notesRow=log.notes
+    ?'<tr><td style="padding:0 0 20px;"><div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #e5e7eb;">Notes</div><div style="background:#fdfdfd;border:1px dashed #cbd5e1;border-radius:10px;padding:14px 16px;font-style:italic;color:#64748b;font-size:13px;">\u201c'+log.notes+'\u201d</div></td></tr>'
+    :'';
+  return '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>'
+    +'<body style="margin:0;padding:0;background:#f0f7ff;font-family:\'Segoe UI\',Tahoma,Geneva,Verdana,sans-serif;">'
+    +'<table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f7ff;padding:30px 20px;">'
+    +'<tr><td align="center">'
+    +'<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:18px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.07);">'
+    +'<tr><td style="background:#ffffff;text-align:center;padding:32px 30px 24px;border-bottom:3px solid #4a90e2;">'
+    +'<div style="margin-bottom:8px;line-height:1;">'
+    +'<span style="font-family:Georgia,serif;font-size:38px;color:#e53935;font-style:italic;">aka</span>'
+    +'<span style="font-family:Arial Black,sans-serif;font-size:52px;font-weight:900;color:#1A5CC7;">Pool</span>'
+    +'<span style="font-family:Impact,Arial Narrow,sans-serif;font-size:52px;color:#f57c00;">CO</span>'
+    +'</div>'
+    +'<div style="font-size:14px;color:#94a3b8;font-weight:500;">Your Neighborhood Pool Services</div>'
+    +'</td></tr>'
+    +'<tr><td style="padding:20px 30px;">'
+    +'<table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fbff;border-radius:10px;">'
+    +'<tr>'
+    +'<td style="padding:14px 18px;font-size:12px;color:#374151;"><strong>Client:</strong> '+pool.ownerName+'</td>'
+    +'<td style="padding:14px 18px;font-size:12px;color:#374151;text-align:center;"><strong>Date:</strong> '+serviceDate+'</td>'
+    +'<td style="padding:14px 18px;font-size:12px;color:#374151;text-align:right;"><strong>Type:</strong> Service Not Provided</td>'
+    +'</tr>'
+    +'</table>'
+    +'</td></tr>'
+    +'<tr><td style="padding:0 30px 20px;"><table width="100%" cellpadding="0" cellspacing="0">'
+    +'<tr><td style="padding:0 0 20px;">'
+    +'<div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #e5e7eb;">Reason for Non-Service</div>'
+    +'<div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:14px 16px;">'
+    +'<span style="font-size:13px;font-weight:700;color:#b45309;">'+reasonText+'</span>'
+    +'</div>'
+    +'</td></tr>'
+    +notesRow
+    +'</table></td></tr>'
+    +'<tr><td style="border-top:1px solid #e5e7eb;padding:20px 30px;text-align:center;background:#fafafa;border-radius:0 0 18px 18px;">'
+    +'<div style="font-size:12px;font-weight:700;color:#475569;margin-bottom:4px;">akaPoolCO Pool Services</div>'
+    +'<div style="font-size:11px;color:#94a3b8;">Granite Bay, CA &nbsp;&middot;&nbsp; 916.644.0416 &nbsp;&middot;&nbsp; akapoolco.gb@gmail.com</div>'
+    +'</td></tr>'
+    +'</table></td></tr></table>'
+    +'</body></html>';
 }
 
 function showHistory(poolId){
