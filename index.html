@@ -823,7 +823,7 @@ a{color:var(--accent);}
 
       </div>
 
-      <div style="text-align:center;font-size:11px;color:var(--hint);padding:14px 0 4px;">akaPoolCO v5 · localStorage only</div>
+      <div style="text-align:center;font-size:11px;color:var(--hint);padding:14px 0 4px;">akaPoolCO v6 · localStorage only</div>
     </div>
 
   </div><!-- /content -->
@@ -1900,24 +1900,37 @@ function calcDosing(){
     }
     const cs2 = csOverride;
     // Build dynamic "How to fix" with calculated doses for corrosive states
+    // Use RAW doses (bypass the ±5 ppm guard in chDose/bicarbDose methods) so even
+    // small gaps show up in the fix text — the guard is for actual dosing, not display.
+    const CH_PPM  = 8;   // lbs calcium chloride per 10 ppm per 10k gal
+    const TA_PPM  = 7;   // lbs baking soda per 10 ppm per 10k gal
+    const rawCHDose     = (ch!=null && ch<targetCH)
+        ? Math.round(((targetCH-ch)/CH_PPM)*(vol/10000)*10)/10 : 0;
+    const rawBicarbDose = (ta!=null && ta<targetTA)
+        ? Math.round(((targetTA-ta)/TA_PPM)*(vol/10000)*10)/10 : 0;
+    const dispCH     = chDose>0     ? chDose     : rawCHDose;
+    const dispBicarb = bicarbDose>0 ? bicarbDose : rawBicarbDose;
+
     let csiFix = cs.fix;
     if(cs.level==='corrosive'||cs.level==='low_corrosive'){
-      const hasCH   = ch!=null && chDose>0;
-      const hasTA   = ta!=null && bicarbDose>0;
+      const hasCH = ch!=null && dispCH>0;
+      const hasTA = ta!=null && dispBicarb>0;
       if(hasCH && hasTA){
-        // Both parameters are low — for severe corrosion add BOTH; mild: either one is enough
         const intro = cs.level==='corrosive'
           ? 'Add <strong>BOTH</strong> to restore water balance:'
           : 'Add <strong>either one or both</strong> to correct balance:';
         csiFix = `${intro}<br>`
-          + `&bull; <strong>${chDose} lbs calcium chloride</strong> → raises CH from ${ch} to ${targetCH} ppm<br>`
-          + `&bull; <strong>${bicarbDose} lbs baking soda</strong> → raises TA from ${ta} to ${targetTA} ppm`;
+          + `&bull; <strong>${dispCH} lbs calcium chloride</strong> → raises CH from ${ch} to ${targetCH} ppm<br>`
+          + `&bull; <strong>${dispBicarb} lbs baking soda</strong> → raises TA from ${ta} to ${targetTA} ppm`;
       } else if(hasCH){
-        csiFix = `Add <strong>${chDose} lbs calcium chloride</strong> to raise CH from ${ch} to ${targetCH} ppm.`;
+        csiFix = `Add <strong>${dispCH} lbs calcium chloride</strong> to raise CH from ${ch} to ${targetCH} ppm.`;
       } else if(hasTA){
-        csiFix = `Add <strong>${bicarbDose} lbs baking soda</strong> to raise TA from ${ta} to ${targetTA} ppm.`;
+        csiFix = `Add <strong>${dispBicarb} lbs baking soda</strong> to raise TA from ${ta} to ${targetTA} ppm.`;
+      } else if(ch!=null && ta!=null){
+        // CH and TA are at or above target — CSI is being driven by pH or temperature
+        csiFix = `CH (${ch} ppm) and TA (${ta} ppm) are at target. CSI is low due to pH or water temperature — raise pH toward ${targetPH} to improve balance.`;
       } else {
-        csiFix = cs.fix; // fallback to generic if no readings entered
+        csiFix = cs.fix; // fallback: readings not entered
       }
     }
     if(cs.level==='low_scaling'||cs.level==='scaling'){
@@ -2890,7 +2903,6 @@ function calNav(dir){
   renderCalendar();
 }
 function getPoolsForDate(dateStr){return pools.filter(p=>isPoolScheduledOn(p,dateStr));}
-function getPoolsForDOW(dow){return[];}
 function renderCalendar(){calView==='month'?renderMonth():renderWeek();}
 function renderMonth(){
   const y=calDate.getFullYear(),m=calDate.getMonth();
@@ -3310,6 +3322,9 @@ function closeSheet(id){
   if(banner) banner.style.display='none';
 }
 document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
+
+// Bootstrap — init() runs on DOM ready (no lock screen since v5)
+document.addEventListener('DOMContentLoaded', init);
 
 // ═════════════════════════════════════════════════════════════
 //  QA ENGINE HEALTH GUARD
